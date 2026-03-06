@@ -9,12 +9,15 @@ import com.eazybytes.accounts.mapper.CustomerMapper;
 import com.eazybytes.accounts.repository.AccountsRepository;
 import com.eazybytes.accounts.repository.CustomerRepository;
 import com.eazybytes.accounts.service.IAccountsService;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
 @Service
+@AllArgsConstructor
 public class AccountsServiceImpl implements IAccountsService {
     private AccountsRepository accountsRepository;
     private CustomerRepository customerRepository;
@@ -22,14 +25,30 @@ public class AccountsServiceImpl implements IAccountsService {
     @Override
     public void createAccount(CustomerDto customerDto) {
         Customer customer = CustomerMapper.mapToCustomer(customerDto,new Customer());
-        Optional<Customer> optionalCustomer = customerRepository.findByMobileNumberAnd(customerDto.getMobileNumber());
+        Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
         if(optionalCustomer.isPresent()){
             throw new CustomerAlreadyExistsException("Customer already registered with given mobileNumber" + customerDto.getMobileNumber());
 
         }
-
+        customer.setCreatedBy("anonymous");
+        customer.setCreatedAt(LocalDateTime.now());
         Customer savedCustomer =  customerRepository.save(customer);
         accountsRepository.save(createNewAccount(savedCustomer));
+    }
+
+    @Override
+    public CustomerDto fetchAccount(String mobileNumber) {
+        return null;
+    }
+
+    @Override
+    public boolean updateAccount(CustomerDto customerDto) {
+        return false;
+    }
+
+    @Override
+    public boolean deleteAccount(String mobileNumber) {
+        return false;
     }
 
     private Accounts createNewAccount(Customer  customer) {
@@ -40,6 +59,8 @@ public class AccountsServiceImpl implements IAccountsService {
         newAccounts.setAccountNumber(randomAccNumber);
         newAccounts.setAccountType(AccountsConstants.SAVINGS);
         newAccounts.setBranchAddress(AccountsConstants.ADDRESS);
+        newAccounts.setCreatedBy("anonymous");
+        newAccounts.setCreatedAt(LocalDateTime.now());
         return newAccounts;
 
     }
